@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "apex-hivemind"
+version = "1.0.0"
+description = "Sovereign Multi-Modal Battle-Management, C-UAS Counter-Swarm & Directed Energy Orchestration OS"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "AGPL-3.0"}
+authors = [
+    {name = "Ahmed Hassan", email = "aah@apex.local"}
+]
+keywords = [
+    "c-uas",
+    "anti-drone",
+    "drone-swarm",
+    "directed-energy-weapons",
+    "high-energy-laser",
+    "high-power-microwave",
+    "anduril-lattice",
+    "shield-ai",
+    "jadc2",
+    "c4isr",
+    "counter-swarm",
+    "weapon-target-assignment",
+    "defense-tech"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering",
+    "Topic :: System :: Distributed Computing",
+    "License :: OSI Approved :: GNU Affero General Public License v3 (AGPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.scripts]
+hivemind = "apex_hivemind.cli:main"
