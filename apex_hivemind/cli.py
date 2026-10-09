@@ -102,13 +102,20 @@ def build_canonical_defense_sector() -> ApexHiveMindOrchestrator:
 def cmd_simulate(args) -> int:
     orchestrator = build_canonical_defense_sector()
     cycles = args.cycles
+    eight_phase = getattr(args, "eight_phase", False)
 
-    print(f"Apex-HiveMind Multi-Modal C-UAS Defense Simulation | Executing {cycles} Cycles")
+    mode_label = "8-Phase Pipeline" if eight_phase else "Standard Loop"
+    print(f"Apex-HiveMind Multi-Modal C-UAS Defense Simulation [{mode_label}] | Executing {cycles} Cycles")
     print("-" * 80)
 
     for _ in range(cycles):
-        report = orchestrator.execute_c_uas_cycle(dt=0.05)
-        print(f"Cycle {report.cycle_index:03d} | Latency: {report.total_cycle_latency_us:6.2f} us | Threats: {report.threats_detected} | Neutralized: {report.threats_neutralized:2d} | Surviving Value: {report.surviving_threat_value:5.1f}")
+        if eight_phase:
+            report = orchestrator.execute_8_phase_cycle(dt=0.05)
+            phases_summary = " ".join([f"{k[:4]}:{v:.1f}us" for k, v in report.phase_latencies_us.items()])
+            print(f"Cycle {report.cycle_index:03d} | Total: {report.total_cycle_latency_us:6.2f} us | Fused: {report.fused_tracks_count} | Kills: {report.threats_neutralized:2d} | [{phases_summary}]")
+        else:
+            report = orchestrator.execute_c_uas_cycle(dt=0.05)
+            print(f"Cycle {report.cycle_index:03d} | Latency: {report.total_cycle_latency_us:6.2f} us | Threats: {report.threats_detected} | Neutralized: {report.threats_neutralized:2d} | Surviving Value: {report.surviving_threat_value:5.1f}")
 
     print("-" * 80)
     valid, reason = orchestrator.provenance_ledger.verify_ledger_integrity()
@@ -154,6 +161,7 @@ def main() -> int:
 
     sim_p = subparsers.add_parser("simulate", help="Run multi-cycle C-UAS raid interception simulation")
     sim_p.add_argument("--cycles", type=int, default=10, help="Number of operational cycles")
+    sim_p.add_argument("--eight-phase", action="store_true", help="Execute using the comprehensive 8-phase pipeline")
 
     bench_p = subparsers.add_parser("benchmark", help="Execute microsecond latency benchmark")
     bench_p.add_argument("--iterations", type=int, default=1000, help="Number of benchmark iterations")

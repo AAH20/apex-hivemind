@@ -126,3 +126,4 @@ class HiveMindCycleReport:
     active_allocations: List[EngagementAllocation]
     fratricide_violations_prevented: int
     hash_chain_head: str
+    phase_latencies_us: Dict[str, float] = field(default_factory=dict)
