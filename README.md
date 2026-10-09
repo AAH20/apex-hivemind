@@ -3,9 +3,10 @@
 **Sovereign Multi-Modal Battle-Management, C-UAS Counter-Swarm & Directed Energy Orchestration OS**  
 *DO-178C Level A / MIL-STD-882E Deterministic Safety Profile | Zero External Dependencies*
 
-[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-31%20Passed-10b981.svg)](#verification-suite--quick-start)
+[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-36%20Passed-10b981.svg)](#verification-suite--quick-start)
 [![Latency SLA](https://img.shields.io/badge/Mean%20Latency-2.72%20%C2%B5s-38bdf8.svg)](#performance-benchmarks)
 [![Architecture](https://img.shields.io/badge/Phases-8%20Pipeline%20Engines-a855f7.svg)](#the-8-architectural-phases)
+[![SITL Swarm Simulation](https://img.shields.io/badge/SITL%20Simulation-ArduPilot%20%7C%20PX4%20%7C%20Gazebo-10b981.svg)](docs/GAZEBO_SITL_SIMULATION_GUIDE.md)
 [![Commercial Specs](https://img.shields.io/badge/Commercial%20Layer-10%2C000x%20Cost%20Advantage-f59e0b.svg)](docs/COMMERCIAL_LAYER.md)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](#license)
 
@@ -131,20 +132,32 @@ Executed on standard hardware without GPU acceleration:
 
 ## Verification Suite & Quick Start
 
-Run the complete 31-test verification suite:
+Run the complete 36-test verification suite:
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py" -v
 ```
 
 Execute the real-time C-UAS raid simulation across all 8 phases:
 ```bash
-python3 -m apex_hivemind.cli simulate --cycles 10
+python3 -m apex_hivemind.cli simulate --eight-phase --cycles 10
+```
+
+Execute the real-time ArduPilot / PX4 MAVLink SITL simulation:
+```bash
+python3 -m apex_hivemind.cli sitl --count 5 --cycles 5
+```
+
+Export the Gazebo Harmonic defense sector SDF world:
+```bash
+python3 -m apex_hivemind.cli export-sdf --output apex_defense_sector.sdf
 ```
 
 Execute the microsecond benchmark suite:
 ```bash
 python3 -m apex_hivemind.cli benchmark --iterations 1000
 ```
+
+For complete multi-UAV setup instructions with ArduPilot and PX4 in Gazebo Harmonic, refer to [GAZEBO_SITL_SIMULATION_GUIDE.md](docs/GAZEBO_SITL_SIMULATION_GUIDE.md).
 
 ---
 

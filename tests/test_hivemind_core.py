@@ -520,6 +520,70 @@ class TestApexHiveMind(unittest.TestCase):
         # Entire 8-phase cycle execution must be sub-millisecond (deterministic SLA < 2500 us)
         self.assertLess(report.total_cycle_latency_us, 2500.0)
 
+    # -------------------------------------------------------------
+    # Simulation, MAVLink & Gazebo SITL Gateway Tests
+    # -------------------------------------------------------------
+    def test_simulation_mavlink_codec_encode_decode_crc(self):
+        from apex_hivemind.simulation.mavlink_packet import MAVLinkCodec, crc16_mcrf4xx
+
+        codec = MAVLinkCodec()
+        cmd_pkt = codec.encode_command_long(
+            target_sys=1, target_comp=1, command=185, param1=1.0
+        )
+        self.assertGreater(len(cmd_pkt), 10)
+        self.assertEqual(cmd_pkt[0], 0xFE)  # MAVLink v1 magic
+
+        msg = codec.decode_packet(cmd_pkt)
+        self.assertIsNotNone(msg)
+        self.assertEqual(msg.msg_id, 76)  # COMMAND_LONG
+        self.assertEqual(msg.sys_id, codec.sys_id)
+
+    def test_simulation_global_position_int_and_wgs84_transform(self):
+        from apex_hivemind.simulation.sitl_bridge import SITLSwarmBridge
+
+        bridge = SITLSwarmBridge(base_origin_lat=37.7749, base_origin_lon=-122.4194, base_origin_alt_m=100.0)
+        # Position slightly east and north
+        cart_pos = bridge.wgs84_to_cartesian_enu(lat=37.7758, lon=-122.4182, alt_rel=50.0)
+        self.assertGreater(cart_pos.x, 50.0)   # East
+        self.assertGreater(cart_pos.y, 50.0)   # North
+        self.assertAlmostEqual(cart_pos.z, 50.0, delta=1.0)
+
+    def test_simulation_flight_termination_packet_generation(self):
+        from apex_hivemind.simulation.mavlink_packet import MAVLinkCodec
+
+        codec = MAVLinkCodec()
+        term_bytes = codec.encode_flight_termination(target_sys=7)
+        msg = codec.decode_packet(term_bytes)
+        self.assertIsNotNone(msg)
+        self.assertEqual(msg.msg_id, 76)
+
+    def test_simulation_sitl_bridge_inject_synthetic_swarm(self):
+        from apex_hivemind.simulation.sitl_bridge import SITLSwarmBridge
+
+        bridge = SITLSwarmBridge()
+        contacts = bridge.inject_synthetic_swarm_frame(count=4, target_center_dist_m=1000.0)
+        self.assertEqual(len(contacts), 4)
+        self.assertEqual(len(bridge.active_vehicles), 4)
+        # Verify contact coordinates
+        for c in contacts:
+            self.assertEqual(c.sensor_kind, "AESA_RADAR")
+            self.assertGreater(c.observed_position.x, 800.0)
+
+    def test_simulation_gazebo_sdf_and_script_generation(self):
+        from apex_hivemind.simulation.gazebo_scenario import GazeboScenarioGenerator
+
+        sdf = GazeboScenarioGenerator.generate_defense_sector_sdf()
+        self.assertIn("<sdf version=\"1.9\">", sdf)
+        self.assertIn("apex_hel_turret", sdf)
+        self.assertIn("aesa_radar_mast", sdf)
+
+        ardu_script = GazeboScenarioGenerator.generate_ardupilot_swarm_runscript(num_drones=3)
+        self.assertIn("sim_vehicle.py", ardu_script)
+        self.assertIn("gazebo-iris", ardu_script)
+
+        px4_script = GazeboScenarioGenerator.generate_px4_swarm_runscript(num_drones=3)
+        self.assertIn("PX4_GZ_MODEL_NAME", px4_script)
+
 
 if __name__ == "__main__":
     unittest.main()

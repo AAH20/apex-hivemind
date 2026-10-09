@@ -155,6 +155,54 @@ def cmd_benchmark(args) -> int:
     return 0
 
 
+def cmd_sitl(args) -> int:
+    from apex_hivemind.simulation.sitl_bridge import SITLSwarmBridge
+
+    orchestrator = build_canonical_defense_sector()
+    bridge = SITLSwarmBridge()
+    count = args.count
+    cycles = args.cycles
+
+    print(f"Apex-HiveMind SITL Gateway | Connecting {count} Simulated MAVLink Swarm Nodes (Gazebo/ArduPilot/PX4)")
+    print("-" * 80)
+
+    for c in range(1, cycles + 1):
+        # 1. Ingest synthetic MAVLink SITL frames
+        raw_contacts = bridge.inject_synthetic_swarm_frame(count=count, target_center_dist_m=1200.0 - (c * 50.0))
+
+        # 2. Execute 8-Phase cycle
+        report = orchestrator.execute_8_phase_cycle(raw_contacts=raw_contacts, dt=0.05)
+
+        # 3. Closed-loop kill actuation feedback over MAVLink
+        terminated_count = 0
+        for alloc in report.active_allocations:
+            if alloc.single_shot_pk >= 0.70:
+                # Extract UAV sys_id from contact target ID (e.g., MAVLINK-UAV-001 -> 1)
+                try:
+                    sys_id = int(alloc.target_id.split("-")[-1])
+                    if bridge.execute_closed_loop_kill(sys_id=sys_id):
+                        terminated_count += 1
+                except (ValueError, IndexError):
+                    pass
+
+        print(f"SITL Cycle {c:02d} | Total Latency: {report.total_cycle_latency_us:6.2f} us | MAVLink Nodes: {len(raw_contacts)} | Kills Executed: {terminated_count}")
+
+    print("-" * 80)
+    print("SITL Demonstration Complete. Closed-loop MAVLink termination orders confirmed.")
+    return 0
+
+
+def cmd_export_sdf(args) -> int:
+    from apex_hivemind.simulation.gazebo_scenario import GazeboScenarioGenerator
+
+    out_path = args.output
+    sdf_content = GazeboScenarioGenerator.generate_defense_sector_sdf()
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(sdf_content)
+    print(f"Successfully generated Gazebo SDF world file: {out_path}")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Apex-HiveMind Sovereign Battle-Management CLI")
     subparsers = parser.add_subparsers(dest="command")
@@ -166,12 +214,23 @@ def main() -> int:
     bench_p = subparsers.add_parser("benchmark", help="Execute microsecond latency benchmark")
     bench_p.add_argument("--iterations", type=int, default=1000, help="Number of benchmark iterations")
 
+    sitl_p = subparsers.add_parser("sitl", help="Run real-time MAVLink SITL bridge simulation (ArduPilot/PX4/Gazebo)")
+    sitl_p.add_argument("--count", type=int, default=5, help="Number of swarm UAVs")
+    sitl_p.add_argument("--cycles", type=int, default=5, help="Number of operational cycles")
+
+    sdf_p = subparsers.add_parser("export-sdf", help="Export Gazebo defense sector SDF world")
+    sdf_p.add_argument("--output", type=str, default="apex_defense_sector.sdf", help="Target SDF output path")
+
     args = parser.parse_args()
 
     if args.command == "simulate":
         return cmd_simulate(args)
     elif args.command == "benchmark":
         return cmd_benchmark(args)
+    elif args.command == "sitl":
+        return cmd_sitl(args)
+    elif args.command == "export-sdf":
+        return cmd_export_sdf(args)
     else:
         parser.print_help()
         return 0
