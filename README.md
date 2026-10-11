@@ -1,13 +1,14 @@
 # Apex-HiveMind
 
 **Sovereign Multi-Modal Battle-Management, C-UAS Counter-Swarm & Directed Energy Orchestration OS**  
-*DO-178C Level A / MIL-STD-882E Deterministic Safety Profile | Zero External Dependencies*
+*Deterministic Pure-Python Battle-Management Architecture | Zero External Dependencies*  
+*(DO-178C Level A / MIL-STD-882E certification artifacts: roadmap — none included in this repository)*
 
 [![Unit Tests](https://img.shields.io/badge/Unit%20Tests-36%20Passed-10b981.svg)](#verification-suite--quick-start)
 [![Latency SLA](https://img.shields.io/badge/Mean%20Latency-2.72%20%C2%B5s-38bdf8.svg)](#performance-benchmarks)
 [![Architecture](https://img.shields.io/badge/Phases-8%20Pipeline%20Engines-a855f7.svg)](#the-8-architectural-phases)
-[![SITL Swarm Simulation](https://img.shields.io/badge/SITL%20Simulation-ArduPilot%20%7C%20PX4%20%7C%20Gazebo-10b981.svg)](docs/GAZEBO_SITL_SIMULATION_GUIDE.md)
-[![Commercial Specs](https://img.shields.io/badge/Commercial%20Layer-10%2C000x%20Cost%20Advantage-f59e0b.svg)](docs/COMMERCIAL_LAYER.md)
+[![SITL Simulation](https://img.shields.io/badge/SITL%20Simulation-MAVLink%20Codec%20%7C%20Synthetic%20Frames-10b981.svg)](docs/GAZEBO_SITL_SIMULATION_GUIDE.md)
+[![Commercial Specs](https://img.shields.io/badge/Commercial%20Layer-Illustrative%20Model-f59e0b.svg)](docs/COMMERCIAL_LAYER.md)
 [![License](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](#license)
 
 ---
@@ -19,7 +20,7 @@ Apex-HiveMind is an open-architecture, sovereign battle-management OS engineered
 - **High-Energy Lasers (HEL):** Fiber laser thermal structural and optical seeker burns with continuous thermal bloom and dwell time management.
 - **Precision Missiles:** High-velocity kinetic interceptors for high-mach cruise and ballistic threats.
 - **35mm Programmable Airburst Guns:** Automated close-range flak fragmentation clouds for terminal leakers.
-- **Blue-Force Interceptor Swarms:** Autonomous air-to-air kinetic hit-to-kill dogfight swarms.
+- **Blue-Force Interceptor Swarms:** Modelled as an effector class (`BLUE_INTERCEPTOR_SWARM`) with a generic probability-of-kill branch; dedicated air-to-air dogfight/swarm logic is roadmap.
 
 ```mermaid
 flowchart TD
@@ -27,12 +28,12 @@ flowchart TD
     classDef highlightBox fill:#09090b,stroke:#71717a,stroke-width:2px,color:#fafafa;
 
     P1["Phase 1: Multi-INT Ingestion<br/>(AESA Polar-to-Cartesian, SIGINT/ESM, Clutter SNR)"]:::phaseBox --> P2["Phase 2: Sensor Track Fusion<br/>(Covariance Intersection, Gating, M/N Hit State)"]:::phaseBox
-    P2 --> P3["Phase 3: Threat Prioritization<br/>(Kemeny Rank Consensus, Stackelberg Game Urgency)"]:::phaseBox
-    P3 --> P4["Phase 4: Submodular m-WTA<br/>(Heterogeneous Multi-Modal Weapon-Target Assignment)"]:::highlightBox
+    P2 --> P3["Phase 3: Threat Prioritization<br/>(Multi-Criteria Rank: Urgency/TTI, Stackelberg Urgency)"]:::phaseBox
+    P3 --> P4["Phase 4: Greedy m-WTA<br/>(Heterogeneous Multi-Modal Weapon-Target Assignment)"]:::highlightBox
     P4 --> P5["Phase 5: DEW Physics Engine<br/>(Beer-Lambert Extinction, Thermal Bloom, Dwell Kinetics)"]:::phaseBox
     P5 --> P6["Phase 6: Fratricide Shield CBF<br/>(4D Spatio-Temporal Control Barrier Invariance)"]:::highlightBox
     P6 --> P7["Phase 7: Actuation & Closed-Loop BDA<br/>(Hardware Mutexes, RCS Collapse, Re-attack Escalation)"]:::phaseBox
-    P7 --> P8["Phase 8: Post-Quantum Provenance<br/>(Merkle DAG Root, ML-DSA-65 Signature, Audit Trail)"]:::phaseBox
+    P7 --> P8["Phase 8: Provenance Ledger<br/>(Merkle DAG Root, SHA-256 Audit Trail, Simulated PQC Tag)"]:::phaseBox
 ```
 
 ---
@@ -40,7 +41,7 @@ flowchart TD
 ## The 8 Architectural Phases
 
 ### Phase 1: Multi-INT Ingestion & Cognitive RF Sensing (`phase1_ingestion.py`)
-- Ingests raw multi-spectral feeds: AESA phased array radar, EO/IR optics, SIGINT/ESM electronic warfare interceptors, STANAG 4607, and Cursor-on-Target (CoT).
+- Ingests raw multi-spectral feeds via implemented parsers for AESA phased array radar and SIGINT/ESM electronic warfare interceptors. STANAG 4607 and Cursor-on-Target (CoT) connectors are roadmap — they appear only in comments/docstrings, with no parser implemented.
 - Transforms spherical coordinates $(R, \theta, \phi)$ to canonical Cartesian reference frames.
 - Discards background thermal noise and radar multipath clutter using dynamic SNR filtering ($\ge 3.0$ dB).
 
@@ -52,14 +53,14 @@ flowchart TD
 
 ### Phase 3: Threat Classification & Stackelberg Game Prioritization (`phase3_prioritization.py`)
 - Kinematic classifier categorizing threats into Ballistic Missiles, Cruise Missiles, Loitering Munitions, FPV Swarm Drones, Recon UAVs, and Electronic Decoys based on velocity, altitude descent rates, and Radar Cross Section (RCS).
-- Kemeny-Young multi-criteria rank aggregation fusing Time-To-Impact (TTI) and asset vulnerability.
+- Multi-criteria rank ordering implemented as a two-key sort (Stackelberg urgency descending, then Time-To-Impact ascending), labelled a Kemeny proxy in code. True Kemeny-Young rank aggregation is roadmap.
 - Stackelberg defender-attacker game model computing payoff:
   $$U(t) = \frac{W_{\text{asset}}}{\max(1, \text{TTI})} \cdot \left(\frac{\text{Lethality}}{50}\right)$$
 
 ### Phase 4: Submodular Multi-Modal Weapon-Target Assignment (`phase4_mwta.py`)
 - Formulates and solves the heterogeneous Weapon-Target Assignment (m-WTA) problem:
   $$\max \sum_{j \in \mathcal{T}} V_j \left( 1 - \prod_{i \in \mathcal{E}} (1 - P_k(i, j))^{x_{ij}} \right)$$
-- Evaluates submodular marginal gain across HPM (clusters), HEL (optical burns), SAM (high-mach leakers), Airburst C-RAM (terminal leakers), and Interceptors with $(1 - 1/e)$ approximation guarantees.
+- Evaluates greedy marginal gain across HPM (clusters), HEL (optical burns), SAM (high-mach leakers), Airburst C-RAM (terminal leakers), and Interceptors. The solver is a greedy marginal-gain heuristic; the $(1 - 1/e)$ submodular approximation bound is not computed or proven (roadmap).
 
 ### Phase 5: Directed Energy Physics & Kinetics Management (`phase5_dew.py`)
 - Physical atmospheric propagation modeling:
@@ -86,13 +87,15 @@ flowchart TD
 ### Phase 8: Post-Quantum Provenance Ledger & Merkle DAG (`phase8_provenance.py`)
 - Cryptographically seals every engagement decision, CBF safety certificate, and effector firing order.
 - Generates binary Merkle DAG root hashes per engagement cycle.
-- Integrates simulated FIPS 204 ML-DSA-65 (Dilithium) post-quantum signatures for NATO STANAG non-repudiation and after-action forensic reconstruction.
+- Generates a simulated ML-DSA-65 signature fingerprint — a SHA-256-derived placeholder string, explicitly labelled Mock/Simulation in code (`_simulate_mldsa65_signature`), with no lattice cryptography. Real FIPS 204 ML-DSA-65 signing and NATO STANAG non-repudiation are roadmap.
 
 ---
 
 ## Commercial Layer & Defense Unit Economics
 
 For full commercial architecture, cost breakdowns, and market analysis, refer to [COMMERCIAL_LAYER.md](docs/COMMERCIAL_LAYER.md).
+
+> *The figures below are an illustrative unit-economics model for narrative context. They are not computed, derived, or validated by the codebase.*
 
 ```
 +---------------------------------------------------------------------------------+
@@ -110,7 +113,7 @@ For full commercial architecture, cost breakdowns, and market analysis, refer to
 ### Why Sovereign Autonomous Systems Cost Tens to Hundreds of Millions
 1. **RF Anechoic & High-Power Microwave Chambers (\$10M – \$25M):** Gigawatt-level pulsed power and multi-beam AESA tracking validation require specialized shielded infrastructure.
 2. **Live-Fire Military Test Ranges (\$35M – \$90M):** Operating days at White Sands (WSMR) or Yuma (YPG) cost \$150,000 – \$400,000 daily, consuming hundreds of expendable drone targets.
-3. **DO-178C Level A & MIL-STD-882E Formal Certification (\$25M – \$60M):** 100% MC/DC coverage, formal safety proofs, and deterministic WCET guarantees required for safety-of-life autonomy.
+3. **DO-178C Level A & MIL-STD-882E Formal Certification (\$25M – \$60M):** Industry cost estimate for the certification effort (100% MC/DC coverage, formal safety proofs, deterministic WCET guarantees). No certification artifacts are included in this repository (roadmap).
 4. **Hardware-Agnostic Deployment:** Breaks proprietary prime lock-in (Raytheon, Lockheed, Anduril Lattice, Shield AI Hivemind) by running on commercial off-the-shelf (COTS) computing modules and open sensor interfaces.
 
 ---
@@ -142,7 +145,7 @@ Execute the real-time C-UAS raid simulation across all 8 phases:
 python3 -m apex_hivemind.cli simulate --eight-phase --cycles 10
 ```
 
-Execute the real-time ArduPilot / PX4 MAVLink SITL simulation:
+Execute the MAVLink SITL bridge demo (synthetic frames only; no live ArduPilot/PX4/Gazebo connection — the UDP socket is never bound):
 ```bash
 python3 -m apex_hivemind.cli sitl --count 5 --cycles 5
 ```

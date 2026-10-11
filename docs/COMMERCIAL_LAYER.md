@@ -1,5 +1,7 @@
 # Apex-HiveMind Commercial Layer & Defense Unit Economics
 
+> **Scope note:** All figures in this document are illustrative market and economic models provided for narrative context. They are not derived from, computed by, or validated by the codebase. Capability items marked *(roadmap)* are not implemented in this repository.
+
 ## 1. Executive Summary & Market Dynamics
 
 The global Counter-Unmanned Aerial Systems (C-UAS) and Autonomous Multi-Domain Battle Management market is projected to expand from **\$2.7 billion in 2024 to over \$13.5 billion by 2032** (CAGR > 21.8%), driven by the democratization of autonomous FPV strike drones, massed loitering munition saturation raids, and autonomous swarming tactics.
@@ -92,7 +94,7 @@ A common misconception in commercial enterprise AI is attempting to apply Large 
 ```
 
 In dynamic combat zones, high latency is fatal. Apex-HiveMind replaces non-deterministic probabilistic language models with:
-- **Submodular Multi-Modal WTA Heuristics** with proven $(1 - 1/e)$ approximation bounds.
+- **Greedy Multi-Modal WTA Heuristics** — a greedy marginal-gain heuristic; the $(1 - 1/e)$ submodular approximation bound is not computed or proven *(roadmap)*.
 - **Covariance Intersection & Extended Gating** for sensor fusion under unknown cross-correlations.
 - **Real-Time Control Barrier Functions (CBF)** ensuring 100% forward invariance and zero blue-force attrition.
 
@@ -105,11 +107,11 @@ In dynamic combat zones, high latency is fatal. Apex-HiveMind replaces non-deter
 1. **Apex-HiveMind Core (Open Sovereign Architecture):**
    - Free for research, simulation testbeds, academia, and open interoperability standards.
    - Zero external pip dependencies; runs natively on Linux, macOS, and POSIX RTOS.
-2. **Apex-HiveMind Enterprise / Defense Prime Edition:**
-   - STANAG 4607, STANAG 4586, and Cursor-on-Target (CoT) mil-spec connector suite.
-   - FIPS 140-3 Hardware Security Module (HSM) and post-quantum ML-DSA-65 key generation modules.
-   - Hardware-in-the-Loop (HIL) telemetry injectors with microsecond deterministic guarantees.
-   - DO-178C Level A verification artifacts and qualification test suites.
+2. **Apex-HiveMind Enterprise / Defense Prime Edition** *(roadmap — the items below are not implemented in this repository)*:
+   - STANAG 4607, STANAG 4586, and Cursor-on-Target (CoT) mil-spec connector suite *(roadmap)*.
+   - FIPS 140-3 Hardware Security Module (HSM) and post-quantum ML-DSA-65 key generation modules *(roadmap — the code ships only a SHA-256-derived simulated ML-DSA-65 fingerprint, no lattice cryptography)*.
+   - Hardware-in-the-Loop (HIL) telemetry injectors with microsecond deterministic guarantees *(roadmap)*.
+   - DO-178C Level A verification artifacts and qualification test suites *(roadmap — no certification artifacts are included)*.
 
 ### 5-Year Total Cost of Ownership (TCO) Comparison
 

@@ -1,8 +1,10 @@
 # High-Fidelity Swarm Simulation Guide: ArduPilot & PX4 on Gazebo
 
+> **Scope note:** This document describes a target integration architecture and setup runbook. The shipped `apex_hivemind.cli sitl` command does **not** connect to a live ArduPilot/PX4/Gazebo instance — it injects **synthetic** MAVLink frames and never binds a UDP socket. A genuine live-SITL bridge (socket bind + real telemetry ingress) is roadmap. The MAVLink codec, WGS84→ENU conversion, and Gazebo SDF generator are implemented; the live autopilot link is not.
+
 ## 1. Executive Demonstration Architecture
 
-To achieve the highest credibility of demonstration mastery for defense acquisition authorities (DoD, NATO, MoD), defense primes, and autonomous systems evaluators, **Apex-HiveMind** interfaces directly with production autopilot flight software running Software-In-The-Loop (SITL) atop the **Gazebo (Harmonic / Classic)** physics engine.
+The target architecture **Apex-HiveMind** is designed to interface with production autopilot flight software running Software-In-The-Loop (SITL) atop the **Gazebo (Harmonic / Classic)** physics engine. In the current implementation this interface is not live (see scope note above): the code exercises the MAVLink decode/encode path and 8-phase kernel on synthetic frames.
 
 Rather than relying on abstract mathematical synthetic loops, this architecture exercises:
 - **Actual Autopilot Flight Software:** Real ArduPilot Copter / PX4 flight stacks executing complete sensor fusion, EKF3/EKF2 attitude estimation, and motor mixer controllers.
@@ -130,11 +132,11 @@ python3 -m apex_hivemind.cli sitl --count 5 --cycles 5
 1. **Autonomous Ingress:** The hostile drones take off and fly waypoint trajectories towards the defended forward operating base (HQ).
 2. **Phase 1 (Multi-INT Ingestion):** Apex-HiveMind receives high-frequency MAVLink `GLOBAL_POSITION_INT` messages, decodes the binary frames with zero external dependencies, and maps WGS84 GPS coordinates to local East-North-Up (ENU) Cartesian vectors.
 3. **Phase 2 & 3 (Fusion & Prioritization):** Track covariance is updated via Covariance Intersection. The threat classifier identifies high-speed closing profiles and ranks targets by Time-To-Impact (TTI) and Stackelberg vulnerability.
-4. **Phase 4 & 5 (m-WTA & DEW Physics):** The submodular solver assigns the 60 kW High-Energy Laser and High-Power Microwave effectors. Atmospheric Beer-Lambert attenuation and thermal blooming calculations determine required dwell times (0.8s – 1.4s).
+4. **Phase 4 & 5 (m-WTA & DEW Physics):** The greedy m-WTA solver assigns the 60 kW High-Energy Laser and High-Power Microwave effectors. Atmospheric Beer-Lambert attenuation and thermal blooming calculations determine required dwell times (0.8s – 1.4s).
 5. **Phase 6 (Fratricide Shield):** The 4D spatio-temporal Control Barrier Function validates that the friendly scout UAV (SYSID 5) is safely outside the laser cylinder and HPM cone ($h(x) \ge 0$).
 6. **Phase 7 (Actuation & Kill Execution):** Upon optical dwell completion, closed-loop BDA confirms destruction. Apex-HiveMind immediately constructs a MAVLink `COMMAND_LONG` packet (`MAV_CMD_DO_FLIGHTTERMINATION`, command 185) and streams it to the targeted vehicle.
 7. **Physical Neutralization in Gazebo:** The targeted SITL drone receives the flight termination order, cuts all motor PWM outputs, disarms, and tumbles to the ground in the Gazebo physics simulation.
-8. **Phase 8 (Post-Quantum Provenance):** The entire engagement sequence, safety certificate proof, and effector telemetry are cryptographically sealed in the Merkle DAG with FIPS 204 ML-DSA-65 signatures.
+8. **Phase 8 (Provenance):** The entire engagement sequence, safety certificate proof, and effector telemetry are cryptographically sealed in the SHA-256 Merkle DAG. The post-quantum tag is a simulated ML-DSA-65 fingerprint (SHA-256-derived placeholder), not real lattice signing.
 
 ---
 
@@ -147,4 +149,4 @@ python3 -m apex_hivemind.cli sitl --count 5 --cycles 5
 | **Dynamic Kill Actuation** | MAVLink `MAV_CMD_DO_FLIGHTTERMINATION` (`mavlink_packet.py`) | Actuator disarm causing physical freefall in Gazebo |
 | **Sub-Millisecond Loop SLA** | Microsecond cycle execution | Mean cycle latency: **2.72 µs**, p99: **36.75 µs** |
 | **Safety Assurance** | 4D Spatio-Temporal CBF Forward Invariance | Zero friendly casualties guaranteed mathematically |
-| **Audit Compliance** | Append-only Merkle DAG ledger (`provenance_ledger.py`) | FIPS 204 ML-DSA-65 post-quantum non-repudiation |
+| **Audit Compliance** | Append-only Merkle DAG ledger (`provenance_ledger.py`) | SHA-256 hash-chain integrity + simulated ML-DSA-65 fingerprint tag |
